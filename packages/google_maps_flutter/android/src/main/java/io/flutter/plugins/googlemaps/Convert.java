@@ -209,6 +209,10 @@ class Convert {
     if (myLocationEnabled != null) {
       sink.setMyLocationEnabled(toBoolean(myLocationEnabled));
     }
+    final Object nightMapEnabled = data.get("nightMapEnabled");
+    if (myLocationEnabled != null) {
+      sink.setNightMapEnabled(toBoolean(nightMapEnabled));
+    }
   }
 
   static void interpretMarkerOptions(Object o, MarkerOptionsSink sink) {

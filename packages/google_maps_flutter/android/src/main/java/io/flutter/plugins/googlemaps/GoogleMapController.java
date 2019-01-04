@@ -26,6 +26,7 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import io.flutter.plugin.common.MethodCall;
@@ -60,6 +61,7 @@ final class GoogleMapController
   private GoogleMap googleMap;
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
+  private boolean nightMapEnabled = false;
   private boolean disposed = false;
   private final float density;
   private MethodChannel.Result mapReadyResult;
@@ -173,6 +175,7 @@ final class GoogleMapController
       mapReadyResult.success(null);
       mapReadyResult = null;
     }
+    googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, nightMapEnabled ? R.raw.night_map_style : R.raw.day_map_style));
     googleMap.setOnCameraMoveStartedListener(this);
     googleMap.setOnCameraMoveListener(this);
     googleMap.setOnCameraIdleListener(this);
@@ -192,6 +195,7 @@ final class GoogleMapController
         break;
       case "map#update":
         {
+
           Convert.interpretGoogleMapOptions(call.argument("options"), this);
           result.success(Convert.toJson(getCameraPosition()));
           break;
@@ -411,6 +415,11 @@ final class GoogleMapController
     if (googleMap != null) {
       updateMyLocationEnabled();
     }
+  }
+
+  @Override
+  public void setNightMapEnabled(boolean nightMapEnabled) {
+    this.nightMapEnabled = nightMapEnabled;
   }
 
   private void updateMyLocationEnabled() {

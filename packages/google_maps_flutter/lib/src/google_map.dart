@@ -21,6 +21,7 @@ class GoogleMap extends StatefulWidget {
     this.tiltGesturesEnabled = true,
     this.trackCameraPosition = false,
     this.myLocationEnabled = false,
+    this.nightMapEnabled = false,
   }) : assert(initialCameraPosition != null);
 
   final MapCreatedCallback onMapCreated;
@@ -56,6 +57,9 @@ class GoogleMap extends StatefulWidget {
 
   /// True if the map view should relay camera move events to Flutter.
   final bool trackCameraPosition;
+
+  /// True for showing day map, False for showing night map
+  final bool nightMapEnabled;
 
   /// True if a "My Location" layer should be shown on the map.
   ///
@@ -170,6 +174,7 @@ class _GoogleMapState extends State<GoogleMap> {
 /// When used to change configuration, null values will be interpreted as
 /// "do not change this configuration option".
 class _GoogleMapOptions {
+
   _GoogleMapOptions({
     this.compassEnabled,
     this.cameraTargetBounds,
@@ -181,6 +186,7 @@ class _GoogleMapOptions {
     this.trackCameraPosition,
     this.zoomGesturesEnabled,
     this.myLocationEnabled,
+    this.nightMapEnabled
   });
 
   static _GoogleMapOptions fromWidget(GoogleMap map) {
@@ -195,6 +201,7 @@ class _GoogleMapOptions {
       trackCameraPosition: map.trackCameraPosition,
       zoomGesturesEnabled: map.zoomGesturesEnabled,
       myLocationEnabled: map.myLocationEnabled,
+      nightMapEnabled: map.nightMapEnabled,
     );
   }
 
@@ -218,6 +225,8 @@ class _GoogleMapOptions {
 
   final bool myLocationEnabled;
 
+  final bool nightMapEnabled;
+
   Map<String, dynamic> toMap() {
     final Map<String, dynamic> optionsMap = <String, dynamic>{};
 
@@ -237,6 +246,7 @@ class _GoogleMapOptions {
     addIfNonNull('zoomGesturesEnabled', zoomGesturesEnabled);
     addIfNonNull('trackCameraPosition', trackCameraPosition);
     addIfNonNull('myLocationEnabled', myLocationEnabled);
+    addIfNonNull('nightMapEnabled', nightMapEnabled);
     return optionsMap;
   }
 
