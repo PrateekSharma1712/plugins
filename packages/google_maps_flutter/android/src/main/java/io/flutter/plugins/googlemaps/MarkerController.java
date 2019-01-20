@@ -78,6 +78,10 @@ class MarkerController implements MarkerOptionsSink {
     marker.setPosition(position);
   }
 
+  public LatLng getPosition() {
+    return marker.getPosition();
+  }
+
   @Override
   public void setRotation(float rotation) {
     marker.setRotation(rotation);

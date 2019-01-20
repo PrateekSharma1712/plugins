@@ -17,14 +17,20 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.FrameLayout;
+
 import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -33,9 +39,14 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.platform.PlatformView;
+import io.flutter.plugins.trail.RouteOverlayView;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Controller of a single GoogleMaps MapView instance. */
@@ -57,6 +68,8 @@ final class GoogleMapController
   private final MethodChannel methodChannel;
   private final PluginRegistry.Registrar registrar;
   private final MapView mapView;
+  private final FrameLayout containerLayout;
+  private RouteOverlayView routeOverlayView;
   private final Map<String, MarkerController> markers;
   private GoogleMap googleMap;
   private boolean trackCameraPosition = false;
@@ -85,11 +98,15 @@ final class GoogleMapController
         new MethodChannel(registrar.messenger(), "plugins.flutter.io/google_maps_" + id);
     methodChannel.setMethodCallHandler(this);
     this.registrarActivityHashCode = registrar.activity().hashCode();
+    this.containerLayout = new FrameLayout(context);
+    routeOverlayView = new RouteOverlayView(context);
+    this.containerLayout.addView(mapView);
+    this.containerLayout.addView(routeOverlayView);
   }
 
   @Override
   public View getView() {
-    return mapView;
+    return containerLayout;
   }
 
   void init() {
@@ -168,7 +185,7 @@ final class GoogleMapController
   }
 
   @Override
-  public void onMapReady(GoogleMap googleMap) {
+  public void onMapReady(final GoogleMap googleMap) {
     this.googleMap = googleMap;
     googleMap.setOnInfoWindowClickListener(this);
     if (mapReadyResult != null) {
@@ -180,7 +197,55 @@ final class GoogleMapController
     googleMap.setOnCameraMoveListener(this);
     googleMap.setOnCameraIdleListener(this);
     googleMap.setOnMarkerClickListener(this);
+    googleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+      @Override
+      public void onMapLongClick(LatLng latLng) {
+        mapReadyResult.success(latLng);
+      }
+    });
+    googleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+      @Override
+      public void onMapLoaded() {
+        final List<LatLng> route = new ArrayList<>();
+        Set<Map.Entry<String, MarkerController>> entries = markers.entrySet();
+        for (Map.Entry<String, MarkerController> entry : entries) {
+          route.add(entry.getValue().getPosition());
+        }
+        zoomRoute(route);
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+          @Override public void run() {
+            routeOverlayView.setUpPath(route, googleMap, RouteOverlayView.AnimType.PATH);
+          }
+        }, 1000);
+        /*route.add(new LatLng(18.5967274, 73.7654366));
+        route.add(new LatLng(18.6028072, 73.7650655));
+        zoomRoute(route);
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+          @Override public void run() {
+            routeOverlayView.setUpPath(route, googleMap, RouteOverlayView.AnimType.PATH);
+          }
+        }, 1000);*/
+      }
+    });
     updateMyLocationEnabled();
+  }
+
+  private void zoomRoute(List<LatLng> lstLatLngRoute) {
+
+    if (googleMap == null || lstLatLngRoute == null || lstLatLngRoute.isEmpty()) return;
+
+    LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+    for (LatLng latLngPoint : lstLatLngRoute)
+      boundsBuilder.include(latLngPoint);
+
+    int routePadding = 100;
+    LatLngBounds latLngBounds = boundsBuilder.build();
+
+    googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, routePadding));
   }
 
   @Override
@@ -261,6 +326,7 @@ final class GoogleMapController
 
   @Override
   public void onCameraMove() {
+    routeOverlayView.onCameraMove(googleMap);
     if (!trackCameraPosition) {
       return;
     }

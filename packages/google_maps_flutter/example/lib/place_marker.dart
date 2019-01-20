@@ -37,6 +37,20 @@ class PlaceMarkerBodyState extends State<PlaceMarkerBody> {
   void _onMapCreated(GoogleMapController controller) {
     this.controller = controller;
     controller.onMarkerTapped.add(_onMarkerTapped);
+    controller.addMarker(MarkerOptions(
+      position: LatLng(
+        center.latitude + sin(1 * pi / 6.0) / 20.0,
+        center.longitude + cos(1 * pi / 6.0) / 20.0,
+      ),
+      infoWindowText: const InfoWindowText('Marker #1', '*'),
+    ));
+    controller.addMarker(MarkerOptions(
+      position: LatLng(
+        center.latitude + sin(2 * pi / 6.0) / 20.0,
+        center.longitude + cos(2 * pi / 6.0) / 20.0,
+      ),
+      infoWindowText: const InfoWindowText('Marker #2', '*'),
+    ));
   }
 
   @override

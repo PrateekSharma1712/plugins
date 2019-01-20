@@ -11,9 +11,8 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR KEY HERE" />
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAgKDWhpHFJBN2d4GGrOklr1XT5DwrGsw4"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
